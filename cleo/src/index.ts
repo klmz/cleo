@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { loadOptions, getAllowedChatIds } from './config/options';
 import { initializeDatabase, closeDatabase } from './database/db';
 import { ChoreService } from './services/ChoreService';

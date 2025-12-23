@@ -22,8 +22,8 @@ export function loadOptions(): AddonOptions {
   logger.debug(`Loading configuration from ${optionsPath}`);
 
   if (!fs.existsSync(optionsPath)) {
-    logger.error(`Options file not found at ${optionsPath}`);
-    throw new Error(`Options file not found: ${optionsPath}`);
+    logger.warn(`Options file not found at ${optionsPath}, attempting to load from environment variables`);
+    return loadOptionsFromEnv();
   }
 
   const fileContents = fs.readFileSync(optionsPath, 'utf-8');
@@ -81,4 +81,34 @@ export function getAllowedChatIds(options: AddonOptions): number[] {
     .split(',')
     .map((id) => parseInt(id.trim(), 10))
     .filter((id) => !isNaN(id));
+}
+
+function loadOptionsFromEnv(): AddonOptions {
+  const options: Partial<AddonOptions> = {
+    telegram_token: process.env.TELEGRAM_TOKEN,
+    gemini_api_key: process.env.GEMINI_API_KEY,
+    allowed_chat_ids: process.env.ALLOWED_CHAT_IDS,
+    homeassistant_url: process.env.HOMEASSISTANT_URL,
+    homeassistant_token: process.env.HOMEASSISTANT_TOKEN,
+    reminder_check_interval: process.env.REMINDER_CHECK_INTERVAL
+      ? parseInt(process.env.REMINDER_CHECK_INTERVAL, 10)
+      : undefined,
+    log_level: process.env.LOG_LEVEL as 'debug' | 'info' | 'warn' | 'error',
+  };
+
+  const mergedOptions: AddonOptions = {
+    ...DEFAULT_OPTIONS,
+    ...options,
+  } as AddonOptions;
+
+  validateOptions(mergedOptions);
+
+  logger.info('Configuration loaded from environment variables');
+  logger.debug(`Reminder check interval: ${mergedOptions.reminder_check_interval} minutes`);
+  logger.debug(`Log level: ${mergedOptions.log_level}`);
+  logger.debug(
+    `Allowed chat IDs: ${mergedOptions.allowed_chat_ids ? 'configured' : 'not configured'}`
+  );
+
+  return mergedOptions;
 }
