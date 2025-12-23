@@ -1,5 +1,4 @@
 import { Context } from 'telegraf';
-import { message } from 'telegraf/filters';
 import { ChoreService } from '../../services/ChoreService';
 import { GeminiService } from '../../services/GeminiService';
 import { getRecentChatHistory, storeChatMessage } from '../../llm/contextBuilder';
@@ -38,6 +37,10 @@ export function createConversationHandler(
       return;
     }
 
+    if (!ctx.chat || !ctx.from) {
+      logger.error('No chat or user found');
+      return;
+    }
     const chatId = ctx.chat.id;
     const messageText = ctx.message.text;
     const userId = ctx.from?.id;

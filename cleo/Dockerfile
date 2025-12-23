@@ -1,4 +1,4 @@
-ARG BUILD_FROM=ghcr.io/hassio-addons/base:16.3.2
+ARG BUILD_FROM=ghcr.io/home-assistant/aarch64-base:latest
 FROM $BUILD_FROM AS builder
 
 RUN apk add --no-cache \
@@ -18,6 +18,7 @@ RUN npm ci
 COPY src ./src
 
 RUN npm run build
+RUN npm prune --production
 
 FROM $BUILD_FROM
 
@@ -29,8 +30,7 @@ WORKDIR /app
 
 COPY --from=builder /build/package*.json ./
 COPY --from=builder /build/dist ./dist
-
-RUN npm ci --omit=dev
+COPY --from=builder /build/node_modules ./node_modules
 
 COPY run.sh /
 RUN chmod +x /run.sh
