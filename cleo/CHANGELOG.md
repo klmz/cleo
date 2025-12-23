@@ -1,6 +1,9 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+## [0.1.8] - 2025-12-23
+- Add a ui!
+
 ## [0.1.7] - 2025-12-23
 - Update hassio_role to manager
 - Update hassio_api to true

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cleo Household Manager</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cleo Household Manager</h1>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="chores">Chores</button>
+            <button class="tab-btn" data-tab="garbage">Garbage Schedule</button>
+        </div>
+
+        <div id="chores" class="tab-content active">
+            <div class="section-header">
+                <h2>Household Chores</h2>
+                <button id="refresh-chores" class="btn-icon">↻</button>
+            </div>
+            <div id="chores-list" class="grid-list">
+                <!-- Chores will be populated here -->
+            </div>
+        </div>
+
+        <div id="garbage" class="tab-content">
+            <div class="section-header">
+                <h2>Garbage Schedule</h2>
+                <button id="refresh-garbage" class="btn-icon">↻</button>
+            </div>
+            
+            <div class="add-form">
+                <h3>Add Schedule</h3>
+                <form id="garbage-form">
+                    <div class="form-group">
+                        <label for="garbage-date">Date</label>
+                        <input type="date" id="garbage-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="garbage-type">Type</label>
+                        <select id="garbage-type" required>
+                            <option value="">Select Type</option>
+                            <option value="General Waste">General Waste</option>
+                            <option value="Recycling">Recycling (PMD)</option>
+                            <option value="Paper">Paper</option>
+                            <option value="Organic">Organic (GFT)</option>
+                            <option value="Glass">Glass</option>
+                            <option value="Chemical">Chemical</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="garbage-desc">Description</label>
+                        <input type="text" id="garbage-desc" placeholder="Optional notes">
+                    </div>
+                    <button type="submit" class="btn-primary">Add Schedule</button>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <table id="garbage-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Garbage schedule will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

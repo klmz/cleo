@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const CREATE_CHORES_TABLE = `
 CREATE TABLE IF NOT EXISTS chores (
@@ -48,6 +48,21 @@ CREATE INDEX IF NOT EXISTS idx_chat_messages_chat_timestamp
   ON chat_messages(chat_id, timestamp DESC);
 `;
 
+export const CREATE_GARBAGE_SCHEDULE_TABLE = `
+CREATE TABLE IF NOT EXISTS garbage_schedule (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  scheduled_date TEXT NOT NULL,
+  garbage_type TEXT NOT NULL,
+  description TEXT,
+  created_at INTEGER NOT NULL
+);
+`;
+
+export const CREATE_GARBAGE_SCHEDULE_INDEX = `
+CREATE INDEX IF NOT EXISTS idx_garbage_schedule_date
+  ON garbage_schedule(scheduled_date ASC);
+`;
+
 export const CREATE_SYSTEM_STATE_TABLE = `
 CREATE TABLE IF NOT EXISTS system_state (
   key TEXT PRIMARY KEY,
@@ -89,5 +104,7 @@ export const ALL_SCHEMAS = [
   CREATE_CHORE_HISTORY_INDEX,
   CREATE_CHAT_MESSAGES_TABLE,
   CREATE_CHAT_MESSAGES_INDEX,
+  CREATE_GARBAGE_SCHEDULE_TABLE,
+  CREATE_GARBAGE_SCHEDULE_INDEX,
   CREATE_SYSTEM_STATE_TABLE,
 ];

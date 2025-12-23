@@ -31,8 +31,11 @@ WORKDIR /app
 COPY --from=builder /build/package*.json ./
 COPY --from=builder /build/dist ./dist
 COPY --from=builder /build/node_modules ./node_modules
+COPY public ./public
 
 COPY run.sh /
 RUN chmod +x /run.sh
+
+EXPOSE 8099
 
 CMD ["/run.sh"]

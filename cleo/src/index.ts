@@ -6,6 +6,8 @@ import { GeminiService } from './services/GeminiService';
 import { TelegramService } from './services/TelegramService';
 import { HomeAssistantService } from './services/HomeAssistantService';
 import { ReminderService } from './services/ReminderService';
+import { GarbageService } from './services/GarbageService';
+import { WebServer } from './services/WebServer';
 import { logger } from './utils/logger';
 import { getKidsRoomEntities, loadOptions, getAllowedChatIds } from './config/options';
 
@@ -36,8 +38,10 @@ async function main() {
     }
 
     const choreService = new ChoreService();
+    const garbageService = new GarbageService();
     const geminiService = new GeminiService(options.gemini_api_key);
     const telegramService = new TelegramService(options, choreService, geminiService, homeAssistantService);
+    const webServer = new WebServer(choreService, garbageService);
 
     const allowedChatIds = getAllowedChatIds(options);
     const kidsRoomEntities = getKidsRoomEntities(options);
@@ -53,6 +57,7 @@ async function main() {
 
     await telegramService.start();
     reminderService.start();
+    webServer.start();
 
     logger.info('Cleo Household Manager started successfully');
 
