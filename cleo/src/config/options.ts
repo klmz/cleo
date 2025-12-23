@@ -5,6 +5,7 @@ export interface AddonOptions {
   telegram_token: string;
   gemini_api_key: string;
   allowed_chat_ids: string;
+  garbage_calendar_url?: string;
   homeassistant_url?: string;
   homeassistant_token?: string;
   kids_room_entities?: string;
@@ -120,6 +121,7 @@ function loadOptionsFromEnv(): AddonOptions {
     telegram_token: process.env.TELEGRAM_TOKEN,
     gemini_api_key: process.env.GEMINI_API_KEY,
     allowed_chat_ids: process.env.ALLOWED_CHAT_IDS,
+    garbage_calendar_url: process.env.GARBAGE_CALENDAR_URL,
     homeassistant_url: process.env.HOMEASSISTANT_URL,
     homeassistant_token: process.env.HOMEASSISTANT_TOKEN,
     kids_room_entities: process.env.KIDS_ROOM_ENTITIES,

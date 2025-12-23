@@ -80,7 +80,7 @@ export class WebServer {
         });
 
         // Fallback for SPA (if we had client-side routing, but here we just serve index.html)
-        this.app.get('*', (_req, res) => {
+        this.app.get(/.*/, (_req, res) => {
             return res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
         });
     }

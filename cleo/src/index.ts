@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import * as cron from 'node-cron';
 
 import { initializeDatabase, closeDatabase } from './database/db';
 import { ChoreService } from './services/ChoreService';
@@ -55,9 +56,29 @@ async function main() {
       kidsRoomEntities
     );
 
-    await telegramService.start();
+    try {
+      await telegramService.start();
+    } catch (error) {
+      logger.warn(`Failed to start Telegram bot: ${error}. Application will continue without bot functionality.`);
+    }
     reminderService.start();
     webServer.start();
+
+    // Schedule garbage calendar sync
+    if (options.garbage_calendar_url) {
+      logger.info('Scheduling garbage calendar sync');
+
+      // Sync immediately on startup
+      garbageService.syncFromCalendar(options.garbage_calendar_url)
+        .catch(err => logger.error(`Initial garbage sync failed: ${err}`));
+
+      // Schedule daily sync at 04:00 AM
+      cron.schedule('0 4 * * *', () => {
+        logger.info('Running scheduled garbage calendar sync');
+        garbageService.syncFromCalendar(options.garbage_calendar_url!)
+          .catch(err => logger.error(`Scheduled garbage sync failed: ${err}`));
+      });
+    }
 
     logger.info('Cleo Household Manager started successfully');
 

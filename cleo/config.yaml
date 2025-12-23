@@ -1,5 +1,5 @@
 name: Cleo Household Manager
-version: "0.1.8"
+version: "0.1.9"
 slug: cleo
 description: Household chore tracking with Telegram bot and AI assistant (Gemini)
 url: https://github.com/klmz/cleo
@@ -21,6 +21,7 @@ options:
   telegram_token: ""
   gemini_api_key: ""
   allowed_chat_ids: ""
+  garbage_calendar_url: ""
   reminder_check_interval: 60
   log_level: info
 ports:
@@ -29,6 +30,7 @@ schema:
   telegram_token: str
   gemini_api_key: password
   allowed_chat_ids: str
+  garbage_calendar_url: url?
   homeassistant_url: url?
   homeassistant_token: password?
   reminder_check_interval: int(5,1440)

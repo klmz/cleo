@@ -1,6 +1,7 @@
 import { Database } from 'better-sqlite3';
 import { getDatabase } from '../database/db';
 import { logger } from '../utils/logger';
+import * as nodeIcal from 'node-ical';
 
 export interface GarbageScheduleEntry {
     id: number;
@@ -71,6 +72,96 @@ export class GarbageService {
         } catch (error) {
             logger.error(`Failed to remove garbage schedule entry: ${error}`);
             return false;
+        }
+    }
+
+    async syncFromCalendar(url: string): Promise<void> {
+        if (!url) {
+            logger.warn('Garbage calendar URL not configured, skipping sync');
+            return;
+        }
+
+        logger.info(`Syncing garbage calendar from ${url}`);
+
+        try {
+            // Check if URL is webcal and replace with https if needed,
+            // though node-ical might handle it, it's safer to ensure http(s)
+            const syncUrl = url.replace('webcal://', 'https://');
+
+            const events = await nodeIcal.async.fromURL(syncUrl);
+            const validEvents: Array<{ date: string; type: string; description?: string }> = [];
+
+            for (const eventId in events) {
+                if (Object.prototype.hasOwnProperty.call(events, eventId)) {
+                    const event = events[eventId];
+                    if (event.type === 'VEVENT' && event.start) {
+                        const date = event.start.toISOString().split('T')[0];
+                        const summary = event.summary?.trim();
+
+                        if (summary) {
+                            validEvents.push({
+                                date,
+                                type: summary,
+                                description: event.description
+                            });
+                        }
+                    }
+                }
+            }
+
+            if (validEvents.length === 0) {
+                logger.warn('No events found in garbage calendar');
+                return;
+            }
+
+            logger.info(`Found ${validEvents.length} events in garbage calendar. Updating database...`);
+
+            const insertStmt = this.db.prepare(`
+                INSERT INTO garbage_schedule (scheduled_date, garbage_type, description, created_at)
+                VALUES (?, ?, ?, ?)
+            `);
+
+
+
+            const deleteFutureStmt = this.db.prepare(`
+                DELETE FROM garbage_schedule WHERE scheduled_date >= ?
+            `);
+
+            // Transaction to ensure data integrity
+            const transaction = this.db.transaction(() => {
+                // Option 1: Upsert individually (preserves past history if we don't wipe everything)
+                // Option 2: Wipe future events and replace with new calendar data (cleaner for schedule changes)
+                // Going with Option 2: Wipe everything from today onwards and re-insert
+
+                const today = new Date().toISOString().split('T')[0];
+                deleteFutureStmt.run(today);
+
+                const now = Date.now();
+                let addedCount = 0;
+
+                for (const event of validEvents) {
+                    // Only add valid future or today events (or all if we want history, but usually user cares about upcoming)
+                    // If the calendar feed contains history, we might duplicate if we blindly insert.
+                    // But since we wiped >= today, we should only insert >= today from the feed to be safe.
+                    // If the user wants history, we'd need a smarter merge strategy. 
+                    // For now, let's assume we want to sync the *full* calendar as provided, 
+                    // but avoid duplicates if we didn't wipe past events.
+
+                    // Let's filter for >= today for the insert to match the wipe
+                    if (event.date >= today) {
+                        insertStmt.run(event.date, event.type, event.description || null, now);
+                        addedCount++;
+                    }
+                }
+                return addedCount;
+            });
+
+            const count = transaction();
+            logger.info(`Successfully synced ${count} garbage collection events`);
+
+        } catch (error) {
+            logger.error(`Failed to sync garbage calendar: ${error}`);
+            throw error;
         }
     }
 }
