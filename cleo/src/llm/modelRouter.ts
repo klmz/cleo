@@ -15,22 +15,13 @@ const SIMPLE_KEYWORDS = [
 ];
 
 const COMPLEX_KEYWORDS = [
-  'why',
-  'should',
-  'prioritize',
-  'recommend',
-  'analyze',
-  'suggest',
-  'explain',
-  'compare',
-  'evaluate',
-  'optimize',
+  'think'
 ];
 
 export function classifyComplexity(message: string, history: ChatMessage[]): ModelComplexity {
   const messageLower = message.toLowerCase();
 
-  if (messageLower.length > 200) {
+  if (messageLower.length > 700) {
     return 'complex';
   }
 
@@ -50,7 +41,7 @@ export function classifyComplexity(message: string, history: ChatMessage[]): Mod
       (msg) => msg.role === 'assistant' && msg.content.length > 150
     );
     if (hasDeepConversation) {
-      return 'complex';
+      return 'simple';
     }
   }
 
@@ -60,10 +51,10 @@ export function classifyComplexity(message: string, history: ChatMessage[]): Mod
 export function getModelName(complexity: ModelComplexity): string {
   switch (complexity) {
     case 'simple':
-      return 'gemini-2.0-flash-exp';
+      return 'gemini-3-flash-preview';
     case 'complex':
-      return 'gemini-2.0-pro-exp';
+      return 'gemini-3-pro-preview';
     default:
-      return 'gemini-2.0-flash-exp';
+      return 'gemini-3-flash-preview';
   }
 }

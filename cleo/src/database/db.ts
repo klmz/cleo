@@ -21,16 +21,26 @@ export function initializeDatabase(dbPath: string): Database.Database {
 function runMigrations(database: Database.Database): void {
   logger.info('Running database migrations');
 
-  const getCurrentVersion = database.prepare(
-    `SELECT value FROM system_state WHERE key = 'schema_version'`
-  );
-
   let currentVersion = 0;
   try {
-    const row = getCurrentVersion.get() as { value: string } | undefined;
-    currentVersion = row ? parseInt(row.value, 10) : 0;
+    const checkTable = database.prepare(
+      `SELECT name FROM sqlite_master WHERE type='table' AND name='system_state'`
+    );
+    const tableExists = checkTable.get();
+
+    if (tableExists) {
+      const getCurrentVersion = database.prepare(
+        `SELECT value FROM system_state WHERE key = 'schema_version'`
+      );
+      const row = getCurrentVersion.get() as { value: string } | undefined;
+      currentVersion = row ? parseInt(row.value, 10) : 0;
+    } else {
+      logger.debug('System state table does not exist yet, starting from version 0');
+      currentVersion = 0;
+    }
   } catch (error) {
-    logger.debug('System state table does not exist yet, starting from version 0');
+    logger.warn(`Failed to check schema version: ${error}`);
+    currentVersion = 0;
   }
 
   if (currentVersion >= SCHEMA_VERSION) {
