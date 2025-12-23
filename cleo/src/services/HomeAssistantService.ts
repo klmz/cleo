@@ -44,7 +44,7 @@ export class HomeAssistantService {
 
             return (await response.json()) as T;
         } catch (error) {
-            logger.error(`Failed to fetch from Home Assistant: ${error}`);
+            logger.error(`Failed to fetch from Home Assistant [${url}]: ${error}`);
             throw error;
         }
     }
