@@ -62,6 +62,8 @@ export function createConversationHandler(
 
     storeChatMessage(chatId, ctx.message.message_id, 'user', messageText, userId, username);
 
+    await ctx.sendChatAction('typing');
+
 
 
     try {
