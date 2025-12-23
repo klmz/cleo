@@ -17,7 +17,8 @@ export class GeminiService {
     message: string,
     history: ChatMessage[],
     chores: ChoreWithStatus[],
-    explicitComplexity?: ModelComplexity
+    explicitComplexity?: ModelComplexity,
+    devices: any[] = []
   ): Promise<{ response: string; modelUsed: string }> {
     const complexity = explicitComplexity || classifyComplexity(message, history);
     const modelName = getModelName(complexity);
@@ -28,7 +29,9 @@ export class GeminiService {
 
     const model = this.genAI.getGenerativeModel({
       model: modelName,
-      systemInstruction: buildSystemPrompt(chores),
+      // For now, we are not fetching all devices to put in context on every request to save tokens/latency
+      // unless specifically requested. We could inject a minimal list if needed.
+      systemInstruction: buildSystemPrompt(chores, devices),
     });
 
     const formattedHistory = formatMessagesForGemini(history);

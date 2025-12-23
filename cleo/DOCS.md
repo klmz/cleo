@@ -81,13 +81,13 @@ If never completed, uses the chore's creation time as the base.
 
 Cleo uses two Gemini models based on query complexity:
 
-**Gemini 2.0 Flash** (fast, inexpensive):
+**Gemini 3.0 Flash** (fast, inexpensive):
 - Simple chore status queries
 - Quick confirmations
 - Basic list/done commands
 - Short messages (<50 characters with simple keywords)
 
-**Gemini 2.0 Pro** (slower, more capable):
+**Gemini 3.0 Pro** (slower, more capable):
 - Complex reasoning ("What should I prioritize?")
 - Long conversations requiring context
 - Messages with keywords like "why", "should", "recommend"

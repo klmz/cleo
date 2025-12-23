@@ -1,11 +1,13 @@
 import 'dotenv/config';
-import { loadOptions, getAllowedChatIds } from './config/options';
+
 import { initializeDatabase, closeDatabase } from './database/db';
 import { ChoreService } from './services/ChoreService';
 import { GeminiService } from './services/GeminiService';
 import { TelegramService } from './services/TelegramService';
+import { HomeAssistantService } from './services/HomeAssistantService';
 import { ReminderService } from './services/ReminderService';
 import { logger } from './utils/logger';
+import { getKidsRoomEntities, loadOptions, getAllowedChatIds } from './config/options';
 
 async function main() {
   logger.info('Starting Cleo Household Manager');
@@ -21,16 +23,32 @@ async function main() {
 
     initializeDatabase(dbPath);
 
+    let homeAssistantService: HomeAssistantService | undefined;
+
+    if (options.homeassistant_url && options.homeassistant_token) {
+      logger.info('Initializing Home Assistant service');
+      homeAssistantService = new HomeAssistantService(
+        options.homeassistant_url,
+        options.homeassistant_token
+      );
+    } else {
+      logger.info('Home Assistant integration disabled (configuration missing)');
+    }
+
     const choreService = new ChoreService();
     const geminiService = new GeminiService(options.gemini_api_key);
-    const telegramService = new TelegramService(options, choreService, geminiService);
+    const telegramService = new TelegramService(options, choreService, geminiService, homeAssistantService);
 
     const allowedChatIds = getAllowedChatIds(options);
+    const kidsRoomEntities = getKidsRoomEntities(options);
+
     const reminderService = new ReminderService(
       choreService,
       telegramService,
       options.reminder_check_interval,
-      allowedChatIds
+      allowedChatIds,
+      homeAssistantService,
+      kidsRoomEntities
     );
 
     await telegramService.start();

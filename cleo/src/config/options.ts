@@ -7,6 +7,7 @@ export interface AddonOptions {
   allowed_chat_ids: string;
   homeassistant_url?: string;
   homeassistant_token?: string;
+  kids_room_entities?: string;
   reminder_check_interval: number;
   log_level: 'debug' | 'info' | 'warn' | 'error';
 }
@@ -15,6 +16,17 @@ const DEFAULT_OPTIONS: Partial<AddonOptions> = {
   reminder_check_interval: 60,
   log_level: 'info',
 };
+
+// Helper to auto-discover HA if running as an addon
+function applyAutoDiscovery(options: AddonOptions): AddonOptions {
+  // If no URL/Token configured, try Supervisor defaults
+  if (!options.homeassistant_url && !options.homeassistant_token && process.env.SUPERVISOR_TOKEN) {
+    logger.info('Auto-discovering Home Assistant configuration from Supervisor environment');
+    options.homeassistant_url = 'http://supervisor/core';
+    options.homeassistant_token = process.env.SUPERVISOR_TOKEN;
+  }
+  return options;
+}
 
 export function loadOptions(): AddonOptions {
   const optionsPath = process.env.OPTIONS_PATH || '/data/options.json';
@@ -34,16 +46,18 @@ export function loadOptions(): AddonOptions {
     ...options,
   } as AddonOptions;
 
-  validateOptions(mergedOptions);
+  const finalOptions = applyAutoDiscovery(mergedOptions);
+
+  validateOptions(finalOptions);
 
   logger.info('Configuration loaded successfully');
-  logger.debug(`Reminder check interval: ${mergedOptions.reminder_check_interval} minutes`);
-  logger.debug(`Log level: ${mergedOptions.log_level}`);
+  logger.debug(`Reminder check interval: ${finalOptions.reminder_check_interval} minutes`);
+  logger.debug(`Log level: ${finalOptions.log_level}`);
   logger.debug(
-    `Allowed chat IDs: ${mergedOptions.allowed_chat_ids ? 'configured' : 'not configured'}`
+    `Allowed chat IDs: ${finalOptions.allowed_chat_ids ? 'configured' : 'not configured'}`
   );
 
-  return mergedOptions;
+  return finalOptions;
 }
 
 function validateOptions(options: AddonOptions): void {
@@ -69,6 +83,14 @@ function validateOptions(options: AddonOptions): void {
     errors.push('log_level must be one of: debug, info, warn, error');
   }
 
+  // Optional Home Assistant configuration check
+  if (options.homeassistant_url && !options.homeassistant_token) {
+    errors.push('homeassistant_token is required when homeassistant_url is provided');
+  }
+  if (!options.homeassistant_url && options.homeassistant_token) {
+    errors.push('homeassistant_url is required when homeassistant_token is provided');
+  }
+
   if (errors.length > 0) {
     logger.error('Configuration validation failed:');
     errors.forEach((error) => logger.error(`  - ${error}`));
@@ -83,6 +105,16 @@ export function getAllowedChatIds(options: AddonOptions): number[] {
     .filter((id) => !isNaN(id));
 }
 
+export function getKidsRoomEntities(options: AddonOptions): string[] {
+  if (!options.kids_room_entities) {
+    return [];
+  }
+  return options.kids_room_entities
+    .split(',')
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0);
+}
+
 function loadOptionsFromEnv(): AddonOptions {
   const options: Partial<AddonOptions> = {
     telegram_token: process.env.TELEGRAM_TOKEN,
@@ -90,6 +122,7 @@ function loadOptionsFromEnv(): AddonOptions {
     allowed_chat_ids: process.env.ALLOWED_CHAT_IDS,
     homeassistant_url: process.env.HOMEASSISTANT_URL,
     homeassistant_token: process.env.HOMEASSISTANT_TOKEN,
+    kids_room_entities: process.env.KIDS_ROOM_ENTITIES,
     reminder_check_interval: process.env.REMINDER_CHECK_INTERVAL
       ? parseInt(process.env.REMINDER_CHECK_INTERVAL, 10)
       : undefined,
@@ -101,14 +134,16 @@ function loadOptionsFromEnv(): AddonOptions {
     ...options,
   } as AddonOptions;
 
-  validateOptions(mergedOptions);
+  const finalOptions = applyAutoDiscovery(mergedOptions);
+
+  validateOptions(finalOptions);
 
   logger.info('Configuration loaded from environment variables');
-  logger.debug(`Reminder check interval: ${mergedOptions.reminder_check_interval} minutes`);
-  logger.debug(`Log level: ${mergedOptions.log_level}`);
+  logger.debug(`Reminder check interval: ${finalOptions.reminder_check_interval} minutes`);
+  logger.debug(`Log level: ${finalOptions.log_level}`);
   logger.debug(
-    `Allowed chat IDs: ${mergedOptions.allowed_chat_ids ? 'configured' : 'not configured'}`
+    `Allowed chat IDs: ${finalOptions.allowed_chat_ids ? 'configured' : 'not configured'}`
   );
 
-  return mergedOptions;
+  return finalOptions;
 }

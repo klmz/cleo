@@ -47,8 +47,16 @@ export interface GeminiMessage {
 }
 
 export function formatMessagesForGemini(messages: ChatMessage[]): GeminiMessage[] {
-  return messages.map((msg) => ({
+  let formattedMessages = messages.map((msg) => ({
     role: msg.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: msg.content }],
-  }));
+  })) as GeminiMessage[];
+
+  // Gemini requires the first message in history to be from 'user'.
+  // If the history slice starts with 'model', remove it.
+  while (formattedMessages.length > 0 && formattedMessages[0].role === 'model') {
+    formattedMessages.shift();
+  }
+
+  return formattedMessages;
 }
