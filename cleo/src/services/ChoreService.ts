@@ -182,6 +182,37 @@ export class ChoreService {
     return choresWithStatus.filter((chore) => chore.is_overdue);
   }
 
+  getChoreStats(choreId: number): Array<{ user: string; count: number }> {
+    console.log('Getting stats for chore ID:', choreId);
+    const db = getDatabase();
+    const stmt = db.prepare(`
+      SELECT completed_by as user, COUNT(*) as count 
+      FROM chore_history 
+      WHERE chore_id = ? 
+      AND completed_by IS NOT NULL
+      GROUP BY completed_by
+      ORDER BY count DESC
+    `);
+
+    // Also include 'Unknown' if there are completions with null completed_by
+    const unknownStmt = db.prepare(`
+        SELECT COUNT(*) as count
+        FROM chore_history
+        WHERE chore_id = ?
+        AND completed_by IS NULL
+    `);
+
+    const stats = stmt.all(choreId) as Array<{ user: string; count: number }>;
+    const unknownResult = unknownStmt.get(choreId) as { count: number } | undefined;
+    const unknownCount = unknownResult ? unknownResult.count : 0;
+
+    if (unknownCount > 0) {
+      stats.push({ user: 'Unknown', count: unknownCount });
+    }
+
+    return stats;
+  }
+
   private addStatusToChore(chore: Chore): ChoreWithStatus {
     const lastCompletion = this.getLastCompletion(chore.id);
     const dueDate = this.calculateDueDate(chore, lastCompletion);
@@ -192,6 +223,7 @@ export class ChoreService {
     return {
       ...chore,
       last_completed: lastCompletion?.completed_at,
+      last_completed_by: lastCompletion?.completed_by,
       due_date: dueDate,
       is_overdue: now >= dueDate,
       days_until_due: daysUntilDue,

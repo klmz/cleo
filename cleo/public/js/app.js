@@ -66,36 +66,111 @@ async function loadChores() {
             return;
         }
 
-        chores.forEach(chore => {
-            const card = document.createElement('div');
-            card.className = `chore-card ${chore.is_overdue ? 'overdue' : 'upcoming'}`;
-
-            let statusText = '';
-            if (chore.is_overdue) {
-                // Days overdue might be negative, Math.abs to handle logic
-                const days = Math.abs(chore.days_until_due);
-                statusText = `Overdue by ${days} day${days !== 1 ? 's' : ''}`;
-            } else {
-                const days = chore.days_until_due;
-                statusText = `Due in ${days} day${days !== 1 ? 's' : ''}`;
-            }
-
-            // Frequency text
-            const freq = chore.frequency_hours >= 24
-                ? `${Math.floor(chore.frequency_hours / 24)} day(s)`
-                : `${chore.frequency_hours} hours`;
-
-            card.innerHTML = `
-                <div class="chore-name">${chore.name}</div>
-                <div class="chore-status">${statusText}</div>
-                <div class="chore-freq">Repeats every ${freq}</div>
-            `;
-            listEl.appendChild(card);
-        });
+        renderChores(chores, listEl);
 
     } catch (error) {
         console.error('Error fetching chores:', error);
         listEl.innerHTML = '<p class="error">Failed to load chores</p>';
+    }
+}
+
+function renderChores(chores, listEl) {
+    listEl.innerHTML = '';
+
+    const now = Date.now();
+
+    chores.forEach(chore => {
+        const card = document.createElement('div');
+
+        // Logic for "Completed":
+        // 1. Must not be overdue.
+        // 2. Must have been completed previously.
+        // 3. The completion must be within the frequency period (i.e. we are in the "grace period" of doing it).
+        //    User suggestion: "mark it complete if you have a completion in the last 24 hours" (for daily).
+
+        let isCompleted = false;
+        if (!chore.is_overdue && chore.last_completed) {
+            const freqMs = chore.frequency_hours * 60 * 60 * 1000;
+            const timeSinceCompletion = now - chore.last_completed;
+            if (timeSinceCompletion < freqMs) {
+                isCompleted = true;
+            }
+        }
+
+        card.className = `chore-card ${chore.is_overdue ? 'overdue' : 'upcoming'} ${isCompleted ? 'completed' : ''}`;
+        card.dataset.id = chore.id;
+
+        let statusText = '';
+        if (chore.is_overdue) {
+            const days = Math.abs(chore.days_until_due);
+            statusText = `Overdue by ${days} day${days !== 1 ? 's' : ''}`;
+        } else if (isCompleted) {
+            statusText = 'Completed';
+        } else {
+            // It's upcoming/due soon
+            const days = chore.days_until_due;
+            if (days === 0) {
+                // Less than 24 hours
+                statusText = 'Due today';
+            } else {
+                statusText = `Due in ${days} day${days !== 1 ? 's' : ''}`;
+            }
+        }
+
+        // Frequency text
+        const freq = chore.frequency_hours >= 24
+            ? `${Math.floor(chore.frequency_hours / 24)} day(s)`
+            : `${chore.frequency_hours} hours`;
+
+        const lastBy = chore.last_completed_by ? `Last done by ${chore.last_completed_by}` : 'Not completed yet';
+
+        card.innerHTML = `
+            <div class="chore-name">${chore.name}</div>
+            <div class="chore-status">${statusText}</div>
+            <div class="chore-completed-by">${lastBy}</div>
+            <div class="chore-freq">Repeats every ${freq}</div>
+            <div class="chore-stats" style="display: none;">Loading stats...</div>
+        `;
+
+        card.addEventListener('click', (e) => toggleStats(e, chore.id));
+
+        listEl.appendChild(card);
+    });
+}
+
+async function toggleStats(e, choreId) {
+    const card = e.currentTarget;
+    const statsDiv = card.querySelector('.chore-stats');
+
+    if (statsDiv.style.display === 'none') {
+        statsDiv.style.display = 'block';
+        if (statsDiv.dataset.loaded !== 'true') {
+            try {
+                const res = await fetch(`${API_BASE}/chores/${choreId}/stats`);
+                if (!res.ok) throw new Error('Failed to fetch stats');
+
+                const stats = await res.json();
+
+                if (Array.isArray(stats) && stats.length === 0) {
+                    statsDiv.innerHTML = '<div class="stat-row">No history</div>';
+                } else if (Array.isArray(stats)) {
+                    statsDiv.innerHTML = stats.map(s => `
+                        <div class="stat-row">
+                            <span class="stat-user">${s.user}</span>
+                            <span class="stat-count">${s.count}x</span>
+                        </div>
+                    `).join('');
+                } else {
+                    throw new Error('Invalid stats format');
+                }
+                statsDiv.dataset.loaded = 'true';
+            } catch (err) {
+                statsDiv.innerHTML = '<div class="stat-row error">Failed to load stats</div>';
+                console.error(err);
+            }
+        }
+    } else {
+        statsDiv.style.display = 'none';
     }
 }
 

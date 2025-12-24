@@ -1,5 +1,5 @@
 name: Cleo Household Manager
-version: "0.1.9"
+version: "0.1.10"
 slug: cleo
 description: Household chore tracking with Telegram bot and AI assistant (Gemini)
 url: https://github.com/klmz/cleo

@@ -18,6 +18,10 @@ if bashio::config.has_value 'homeassistant_token'; then
     export HOMEASSISTANT_TOKEN=$(bashio::config 'homeassistant_token')
 fi
 
+if bashio::config.has_value 'garbage_calendar_url'; then
+    export GARBAGE_CALENDAR_URL=$(bashio::config 'garbage_calendar_url')
+fi
+
 export OPTIONS_PATH=$CONFIG_PATH
 export DB_PATH=/data/cleo.db
 

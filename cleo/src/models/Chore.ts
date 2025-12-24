@@ -26,6 +26,7 @@ export interface UpdateChoreInput {
 
 export interface ChoreWithStatus extends Chore {
   last_completed?: number; // Unix timestamp in milliseconds
+  last_completed_by?: string | null;
   due_date: number; // Unix timestamp in milliseconds
   is_overdue: boolean;
   days_until_due: number; // Can be negative if overdue

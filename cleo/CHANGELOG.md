@@ -1,6 +1,21 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project will be documented in this file.\
+
+## [0.1.10] - 2025-12-24
+### Added
+- Garbage calendar sync via iCal URL (configurable in options).
+- Chore List UI improvements:
+    - Visual completion status.
+    - "Last done by" information.
+    - Expandable statistics view for chores.
+- `/api/chores/:id/stats` endpoint.
+
+### Fixed
+- Robust error handling for chore statistics.
+- Fixed routing issue for stats endpoint.
+- Fixed `better-sqlite3` build compatibility.
+
 ## [0.1.8] - 2025-12-23
 - Add a ui!
 

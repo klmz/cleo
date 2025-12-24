@@ -91,8 +91,13 @@ h2 {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 /* Sections */
@@ -148,6 +153,16 @@ h2 {
     background-color: var(--success-color);
 }
 
+.chore-card.completed {
+    border-color: var(--success-color);
+    background-color: #f0fdf4;
+}
+
+.chore-card.completed .chore-status {
+    color: var(--success-color);
+    font-weight: 500;
+}
+
 .chore-name {
     font-weight: 600;
     font-size: 18px;
@@ -158,7 +173,14 @@ h2 {
 .chore-status {
     font-size: 14px;
     color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.chore-completed-by {
+    font-size: 13px;
+    color: var(--text-secondary);
     margin-bottom: 8px;
+    font-style: italic;
 }
 
 .chore-card.overdue .chore-status {
@@ -169,6 +191,36 @@ h2 {
 .chore-freq {
     font-size: 12px;
     color: var(--text-secondary);
+}
+
+.chore-stats {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border-color);
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.stat-user {
+    font-weight: 500;
+}
+
+.stat-count {
+    color: var(--text-secondary);
+}
+
+.chore-card {
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+}
+
+.chore-card:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Form */
@@ -231,7 +283,8 @@ table {
     font-size: 14px;
 }
 
-th, td {
+th,
+td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);

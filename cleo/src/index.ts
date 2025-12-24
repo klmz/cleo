@@ -57,7 +57,7 @@ async function main() {
     );
 
     try {
-      await telegramService.start();
+      telegramService.start();
     } catch (error) {
       logger.warn(`Failed to start Telegram bot: ${error}. Application will continue without bot functionality.`);
     }

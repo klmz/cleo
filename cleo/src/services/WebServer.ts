@@ -37,6 +37,21 @@ export class WebServer {
             }
         });
 
+        this.app.get('/api/chores/:id/stats', (req, res) => {
+            logger.info(`Hit stats route for ID: ${req.params.id}`);
+            try {
+                const id = parseInt(req.params.id, 10);
+                if (isNaN(id)) {
+                    return res.status(400).json({ error: 'Invalid ID' });
+                }
+                const stats = this.choreService.getChoreStats(id);
+                return res.json(stats);
+            } catch (error) {
+                logger.error(`Error fetching chore stats: ${error}`);
+                return res.status(500).json({ error: 'Failed to fetch chore stats' });
+            }
+        });
+
         this.app.get('/api/garbage', (_req, res) => {
             try {
                 const schedule = this.garbageService.getAll();
@@ -80,13 +95,20 @@ export class WebServer {
         });
 
         // Fallback for SPA (if we had client-side routing, but here we just serve index.html)
-        this.app.get(/.*/, (_req, res) => {
+        // Fallback for SPA
+        this.app.get(/.*/, (req, res) => {
+            logger.info(`Fallback route hit for: ${req.path}`);
             return res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
         });
     }
 
     public start() {
-        this.app.listen(this.port, () => {
+        logger.info(`Starting web server on port ${this.port}`);
+        this.app.listen(this.port, (err) => {
+            if (err) {
+                logger.error(`Failed to start web server: ${err}`);
+                return;
+            }
             logger.info(`Web server running on port ${this.port}`);
         });
     }
